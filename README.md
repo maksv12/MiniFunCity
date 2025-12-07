@@ -1,2 +1,2 @@
 # MiniFunCity
-My website project =)
+My website project that I'm working on!
