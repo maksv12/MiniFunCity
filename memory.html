@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Memory Game</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; }
+        #board { display: flex; flex-wrap: wrap; justify-content: center; max-width: 500px; margin: auto; }
+        .card { 
+            display: inline-block; 
+            width: 70px; height: 70px; 
+            font-size: 40px; 
+            margin: 5px; 
+            background: #ff69b4; 
+            cursor: pointer; 
+            line-height: 70px; 
+            color: #ff69b4; 
+            border-radius: 8px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .flipped { color: black; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Memory Game!</h1>
+    <div id="board"></div>
+    <h2 id="message"></h2>
+
+    <script>
+        // More emojis for difficulty
+        const emojis = ['🍎','🍌','🍇','🍉','🍒','🍍'];
+        // Duplicate each emoji to make pairs
+        let pairs = [...emojis, ...emojis];
+        // Shuffle
+        let shuffled = pairs.sort(() => Math.random() - 0.5);
+
+        let board = document.getElementById('board');
+        let flipped = [];
+        let matchedCount = 0;
+
+        shuffled.forEach((emoji) => {
+            let div = document.createElement('div');
+            div.className = 'card';
+            div.dataset.value = emoji;
+            div.addEventListener('click', () => flip(div));
+            board.appendChild(div);
+        });
+
+        function flip(card) {
+            if(card.classList.contains('flipped') || flipped.length === 2) return;
+            card.classList.add('flipped');
+            card.innerText = card.dataset.value;
+            flipped.push(card);
+
+            if(flipped.length === 2) {
+                setTimeout(() => {
+                    if(flipped[0].dataset.value !== flipped[1].dataset.value) {
+                        flipped.forEach(c => {
+                            c.classList.remove('flipped');
+                            c.innerText = '';
+                        });
+                    } else {
+                        matchedCount += 2;
+                        if(matchedCount === shuffled.length) {
+                            document.getElementById('message').innerText = "🎉 You matched them all!";
+                        }
+                    }
+                    flipped = [];
+                }, 800);
+            }
+        }
+    </script>
+</body>
+</html>

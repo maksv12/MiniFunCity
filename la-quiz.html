@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MiniFunCity Final ELA Quiz</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 40px;
+    background: #fff8e6;
+  }
+  h1 { font-size: 32px; margin-bottom: 20px; }
+  .choice {
+    display: block;
+    width: 280px;
+    margin: 10px auto;
+    padding: 14px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #question { font-size: 24px; margin-top: 20px; min-height: 60px; }
+  #feedback { margin-top: 15px; font-weight: bold; height: 30px; }
+  #finishBtn {
+    display: none;
+    margin-top: 25px;
+    padding: 12px 28px;
+    font-size: 18px;
+    border: none;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Final ELA Quiz</h1>
+<p>Extra hard, only 5 questions. Good luck! 💪</p>
+
+<div id="question"></div>
+<div id="choices"></div>
+<div id="feedback"></div>
+<button id="finishBtn" onclick="goHome()">Continue to Homepage</button>
+
+<script>
+let questionCounter = 0;
+let correctAnswer;
+const totalQuestions = 5;
+
+// --- Extra hard question pools ---
+const hardSynonyms = [
+  {word:"obfuscate", answer:"confuse"},
+  {word:"alacrity", answer:"eagerness"},
+  {word:"capricious", answer:"fickle"}
+];
+
+const hardAntonyms = [
+  {word:"loquacious", answer:"taciturn"},
+  {word:"lucid", answer:"confused"},
+  {word:"benevolent", answer:"malevolent"}
+];
+
+const hardPOS = [
+  {word:"ubiquitous", answer:"adjective"},
+  {word:"quintessential", answer:"adjective"},
+  {word:"conundrum", answer:"noun"}
+];
+
+const hardPrefixSuffix = [
+  {chunk:"-cide", meaning:"kill"},
+  {chunk:"bene-", meaning:"good"},
+  {chunk:"mal-", meaning:"bad"}
+];
+
+const hardFigurative = [
+  {example:"Time is a thief.", answer:"metaphor"},
+  {example:"He is as sly as a fox.", answer:"simile"},
+  {example:"The leaves danced in the wind.", answer:"personification"}
+];
+
+const hardContext = [
+  {sentence:"Her demeanor was *acerbic*, making people uncomfortable.", answer:"harsh"},
+  {sentence:"The scientist's *esoteric* theory confused everyone.", answer:"obscure"},
+  {sentence:"He exhibited *sagacity* in his decisions.", answer:"wisdom"}
+];
+
+// Random distractors for harder level
+const distractors = [
+  "confusing","happy","cold","hot","noun","verb","adjective","adverb",
+  "before","after","good","bad","metaphor","simile","personification","anger","joy","fickle"
+];
+
+function generateHardQuestion() {
+  questionCounter++;
+  let pool = [hardSynonyms, hardAntonyms, hardPOS, hardPrefixSuffix, hardFigurative, hardContext];
+  let modePool = pool[Math.floor(Math.random()*pool.length)];
+  let item = modePool[Math.floor(Math.random()*modePool.length)];
+
+  let qText = "";
+  let answer = "";
+
+  if(item.word) {
+    if(hardSynonyms.includes(item)) qText = `Synonym for "${item.word}"?`;
+    if(hardAntonyms.includes(item)) qText = `Antonym for "${item.word}"?`;
+    if(hardPOS.includes(item)) qText = `Part of speech: "${item.word}"?`;
+    answer = item.answer;
+  } else if(item.chunk) {
+    qText = `Meaning of "${item.chunk}"?`;
+    answer = item.meaning;
+  } else if(item.example) {
+    qText = `Type of figurative language: "${item.example}"`;
+    answer = item.answer;
+  } else if(item.sentence) {
+    qText = `Context clue: What does the bold word mean?\n${item.sentence}`;
+    answer = item.answer;
+  }
+
+  correctAnswer = answer;
+
+  let options = [answer];
+  while(options.length < 4){
+    let d = distractors[Math.floor(Math.random()*distractors.length)];
+    if(!options.includes(d)) options.push(d);
+  }
+  options.sort(() => Math.random()-0.5);
+
+  document.getElementById("question").innerText = qText;
+
+  let html = "";
+  options.forEach(opt => {
+    html += `<button class="choice" onclick="checkAnswer('${opt}')">${opt}</button>`;
+  });
+
+  document.getElementById("choices").innerHTML = html;
+  document.getElementById("feedback").innerText = "";
+}
+
+function checkAnswer(selected){
+  if(selected === correctAnswer){
+    document.getElementById("feedback").innerText = "✅ Correct!";
+  } else {
+    document.getElementById("feedback").innerText = `❌ Nope — correct: "${correctAnswer}"`;
+  }
+
+  if(questionCounter < totalQuestions){
+    setTimeout(generateHardQuestion, 1500);
+  } else {
+    setTimeout(() => {
+      document.getElementById("question").style.display = "none";
+      document.getElementById("choices").style.display = "none";
+      document.getElementById("feedback").style.display = "none";
+      document.getElementById("finishBtn").style.display = "inline-block";
+    }, 1500);
+  }
+}
+
+function goHome(){
+  window.location.href = "index.html";
+}
+
+// start quiz
+generateHardQuestion();
+</script>
+</body>
+</html>

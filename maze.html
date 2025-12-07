@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mini Maze</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 20px; }
+        #game {
+            display: grid;
+            grid-template-columns: repeat(25, 20px);
+            grid-template-rows: repeat(25, 20px);
+            gap: 2px;
+            justify-content: center;
+            margin: auto;
+            margin-top: 20px;
+        }
+        .cell { width: 20px; height: 20px; background-color: #eee; }
+        .wall { background-color: #333; }
+        .player { background-color: #ff69b4; }
+        .goal { background-color: #4CAF50; }
+        #playAgain {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 8px;
+            background-color: #ff69b4;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #playAgain:hover { background-color: #ff85c1; }
+        #stats { margin-top: 15px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>Mini Maze!</h1>
+    <p>Use arrow keys to reach the green square!</p>
+    <div id="stats">Time: 0s | Moves: 0</div>
+    <div id="game"></div>
+    <h2 id="message"></h2>
+    <button id="playAgain" onclick="location.reload()">Play Again</button>
+
+    <script>
+        const rows = 25;
+        const cols = 25;
+        const game = document.getElementById('game');
+        let playerPos = {x:0, y:0};
+        const goalPos = {x:24, y:24};
+        const playAgainBtn = document.getElementById('playAgain');
+        const stats = document.getElementById('stats');
+        let walls = [];
+        let moves = 0;
+        let seconds = 0;
+        let timer;
+
+        // generate random walls
+        for(let y=0; y<rows; y++){
+            for(let x=0; x<cols; x++){
+                if((x===0 && y===0) || (x===goalPos.x && y===goalPos.y)) continue;
+                if(Math.random() < 0.2) walls.push(`${x},${y}`); // ~20% walls
+            }
+        }
+
+        // create grid
+        let cells = [];
+        for(let y=0; y<rows; y++){
+            for(let x=0; x<cols; x++){
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                if(walls.includes(`${x},${y}`)) cell.classList.add('wall');
+                if(x===playerPos.x && y===playerPos.y) cell.classList.add('player');
+                if(x===goalPos.x && y===goalPos.y) cell.classList.add('goal');
+                game.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+
+        function updatePlayer(){
+            cells.forEach(c => c.classList.remove('player'));
+            const cell = cells.find(c => c.dataset.x==playerPos.x && c.dataset.y==playerPos.y);
+            cell.classList.add('player');
+        }
+
+        function updateStats(){
+            stats.innerText = `Time: ${seconds}s | Moves: ${moves}`;
+        }
+
+        function startTimer(){
+            timer = setInterval(()=>{ 
+                seconds++; 
+                updateStats(); 
+            }, 1000);
+        }
+
+        startTimer();
+
+        document.addEventListener('keydown', e => {
+            let newX = playerPos.x;
+            let newY = playerPos.y;
+            if(e.key==='ArrowUp') newY--;
+            if(e.key==='ArrowDown') newY++;
+            if(e.key==='ArrowLeft') newX--;
+            if(e.key==='ArrowRight') newX++;
+
+            if(newX<0||newX>=cols||newY<0||newY>=rows) return;
+            if(walls.includes(`${newX},${newY}`)) return;
+
+            playerPos.x = newX;
+            playerPos.y = newY;
+            moves++;
+            updatePlayer();
+            updateStats();
+
+            if(playerPos.x===goalPos.x && playerPos.y===goalPos.y){
+                clearInterval(timer);
+                document.getElementById('message').innerText = `🎉 You Win! Time: ${seconds}s | Moves: ${moves}`;
+                playAgainBtn.style.display = 'inline-block';
+            }
+        });
+    </script>
+</body>
+</html>

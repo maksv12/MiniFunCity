@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ELA Practice</title>
+<style>
+  body {
+    font-family: sans-serif;
+    text-align: center;
+    margin: 30px;
+    background: #fff8e6;
+  }
+  h1 { font-size: 32px; margin-bottom: 20px; }
+  .mode-btn {
+    padding: 10px 20px;
+    margin: 6px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .choice {
+    display: block;
+    width: 260px;
+    margin: 8px auto;
+    padding: 12px;
+    font-size: 17px;
+    cursor: pointer;
+  }
+  #question { font-size: 24px; margin-top: 20px; min-height: 50px; }
+  #feedback { margin-top: 15px; font-weight: bold; height: 30px; }
+</style>
+</head>
+<body>
+
+<h1>ELA Practice Center</h1>
+
+<p>Select a skill to practice:</p>
+<button class="mode-btn" onclick="start('synonym')">Synonyms</button>
+<button class="mode-btn" onclick="start('antonym')">Antonyms</button>
+<button class="mode-btn" onclick="start('pos')">Parts of Speech</button>
+<button class="mode-btn" onclick="start('prefixsuffix')">Prefixes & Suffixes</button>
+<button class="mode-btn" onclick="start('figurative')">Figurative Language</button>
+<button class="mode-btn" onclick="start('context')">Context Clues</button>
+
+<div id="question"></div>
+<div id="choices"></div>
+<div id="feedback"></div>
+
+<script>
+let correctAnswer;
+let mode;
+let questionCounter = 0;
+
+// Synonym & Antonym Lists
+const synonyms = [
+  {word:"big", answer:"large"},
+  {word:"happy", answer:"joyful"},
+  {word:"fast", answer:"quick"},
+  {word:"smart", answer:"intelligent"},
+  {word:"angry", answer:"mad"}
+];
+const antonyms = [
+  {word:"hot", answer:"cold"},
+  {word:"early", answer:"late"},
+  {word:"light", answer:"dark"},
+  {word:"strong", answer:"weak"},
+  {word:"full", answer:"empty"}
+];
+
+// Parts of Speech
+const posList = [
+  {word:"run", answer:"verb"},
+  {word:"cat", answer:"noun"},
+  {word:"quickly", answer:"adverb"},
+  {word:"blue", answer:"adjective"},
+  {word:"they", answer:"pronoun"},
+  {word:"and", answer:"conjunction"}
+];
+
+// Prefixes & Suffixes
+const prefixSuffix = [
+  {chunk:"pre-", meaning:"before"},
+  {chunk:"un-", meaning:"not"},
+  {chunk:"re-", meaning:"again"},
+  {chunk:"-ful", meaning:"full of"},
+  {chunk:"-less", meaning:"without"}
+];
+
+// Figurative Language
+const figList = [
+  {example:"Her smile was sunshine.", answer:"metaphor"},
+  {example:"He ran as fast as lightning.", answer:"simile"},
+  {example:"The wind whispered to me.", answer:"personification"},
+  {example:"The classroom was a zoo.", answer:"metaphor"},
+  {example:"She sang like an angel.", answer:"simile"}
+];
+
+// Context Clues
+const contextList = [
+  {sentence:"The *arid* desert had almost no water.", answer:"dry"},
+  {sentence:"She felt *reluctant* to present in class.", answer:"unsure"},
+  {sentence:"The *soaring* eagle flew overhead.", answer:"flying high"},
+  {sentence:"He was *famished* after skipping lunch.", answer:"very hungry"},
+  {sentence:"The music was *deafening*.", answer:"very loud"}
+];
+
+// Random distractors
+const randomWords = [
+  "tiny","slow","bright","sad","yellow","rough","soft","sweet","heavy",
+  "short","thin","tall","young","old","rich","calm","stormy","noisy",
+  "sharp","gentle","round"
+];
+
+function start(selectedMode) {
+  mode = selectedMode;
+  document.getElementById("feedback").innerText = "";
+  generateQuestion();
+}
+
+function generateQuestion() {
+  questionCounter++;
+
+  // Every 15 questions → mini-game trigger
+  if (questionCounter % 15 === 0) {
+    startMiniGame(); // ← will be defined in Part 2
+    return;
+  }
+
+  let questionText = "";
+  let answer = "";
+
+  if (mode === "synonym") {
+    let item = synonyms[Math.floor(Math.random()*synonyms.length)];
+    questionText = `What is a synonym for "${item.word}"?`;
+    answer = item.answer;
+  }
+  if (mode === "antonym") {
+    let item = antonyms[Math.floor(Math.random()*antonyms.length)];
+    questionText = `What is an antonym for "${item.word}"?`;
+    answer = item.answer;
+  }
+  if (mode === "pos") {
+    let item = posList[Math.floor(Math.random()*posList.length)];
+    questionText = `What part of speech is: "${item.word}"?`;
+    answer = item.answer;
+  }
+  if (mode === "prefixsuffix") {
+    let item = prefixSuffix[Math.floor(Math.random()*prefixSuffix.length)];
+    questionText = `What does "${item.chunk}" mean?`;
+    answer = item.meaning;
+  }
+  if (mode === "figurative") {
+    let item = figList[Math.floor(Math.random()*figList.length)];
+    questionText = `What type of figurative language is this?\n"${item.example}"`;
+    answer = item.answer;
+  }
+  if (mode === "context") {
+    let item = contextList[Math.floor(Math.random()*contextList.length)];
+    questionText = `What does the bold word mean?\n${item.sentence}`;
+    answer = item.answer;
+  }
+
+  correctAnswer = answer;
+
+  // Build answer choices
+  let options = [answer];
+  while (options.length < 4) {
+    let w = randomWords[Math.floor(Math.random()*randomWords.length)];
+    if (!options.includes(w)) options.push(w);
+  }
+  options.sort(() => Math.random() - 0.5);
+
+  document.getElementById("question").innerText = questionText;
+
+  let html = "";
+  options.forEach(opt => {
+    html += `<button class="choice" onclick="check('${opt}')">${opt}</button>`;
+  });
+
+  document.getElementById("choices").innerHTML = html;
+}
+
+function check(selected) {
+  if (selected === correctAnswer) {
+    document.getElementById("feedback").innerText = "✅ Correct!";
+  } else {
+    document.getElementById("feedback").innerText =
+      `❌ Nope — correct answer: "${correctAnswer}"`;
+  }
+
+  setTimeout(() => {
+    document.getElementById("feedback").innerText = "";
+    generateQuestion();
+  }, 1500);
+}
+</script>
+</body>
+</html>
+
+// MINI GAME
+<style>
+  #gameContainer {
+    display: none;
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  canvas {
+    background: #cdeaff;
+    border: 3px solid #333;
+    border-radius: 10px;
+  }
+
+  #mobileControls {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .arrowBtn {
+    padding: 15px 20px;
+    font-size: 20px;
+    border-radius: 10px;
+    border: none;
+    background: #fff;
+    box-shadow: 0 0 5px #0003;
+    cursor: pointer;
+  }
+
+  #continueBtn {
+    margin-top: 15px;
+    padding: 10px 25px;
+    font-size: 18px;
+    border: none;
+    background: #4caf50;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    display: none;
+  }
+</style>
+
+<div id="gameContainer">
+  <h2>Mini Game Break!</h2>
+  <canvas id="gameCanvas" width="320" height="480"></canvas>
+
+  <div id="mobileControls">
+    <button class="arrowBtn" onclick="player.vx = -3">⬅️</button>
+    <button class="arrowBtn" onclick="player.vx = 3">➡️</button>
+  </div>
+
+  <button id="continueBtn" onclick="endMiniGame()">Continue</button>
+</div>
+
+<script>
+let gameActive = false;
+let canvas, ctx;
+let player, platforms, gravity, jumpForce, gameLoop;
+
+function startMiniGame() {
+  document.getElementById("question").style.display = "none";
+  document.getElementById("choices").style.display = "none";
+  document.getElementById("feedback").style.display = "none";
+
+  document.getElementById("gameContainer").style.display = "block";
+
+  canvas = document.getElementById("gameCanvas");
+  ctx = canvas.getContext("2d");
+
+  gravity = 0.25;
+  jumpForce = -7;
+
+  player = {
+    x: 160,
+    y: 400,
+    width: 30,
+    height: 30,
+    vx: 0,
+    vy: 0
+  };
+
+  platforms = [];
+  for (let i = 0; i < 8; i++) {
+    platforms.push({
+      x: Math.random() * 260,
+      y: i * 60,
+      width: 60,
+      height: 10
+    });
+  }
+
+  gameActive = true;
+  gameLoop = requestAnimationFrame(updateGame);
+}
+
+function updateGame() {
+  if (!gameActive) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // gravity
+  player.vy += gravity;
+  player.y += player.vy;
+  player.x += player.vx;
+
+  // floor wrap
+  if (player.x < -30) player.x = canvas.width;
+  if (player.x > canvas.width) player.x = -30;
+
+  // collision with platforms
+  platforms.forEach(p => {
+    if (
+      player.y + player.height >= p.y &&
+      player.y + player.height <= p.y + 10 &&
+      player.x + player.width > p.x &&
+      player.x < p.x + p.width &&
+      player.vy > 0
+    ) {
+      player.vy = jumpForce;
+    }
+  });
+
+  // move screen upward
+  if (player.y < 200) {
+    let offset = 200 - player.y;
+    player.y = 200;
+    platforms.forEach(p => (p.y += offset));
+  }
+
+  // respawn platforms
+  platforms.forEach(p => {
+    if (p.y > canvas.height) {
+      p.x = Math.random() * 260;
+      p.y = -10;
+    }
+  });
+
+  // draw player
+  ctx.fillStyle = "#ff4d4d";
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  // draw platforms
+  ctx.fillStyle = "#4caf50";
+  platforms.forEach(p =>
+    ctx.fillRect(p.x, p.y, p.width, p.height)
+  );
+
+  requestAnimationFrame(updateGame);
+}
+
+// KEYBOARD CONTROLS
+document.addEventListener("keydown", e => {
+  if (!gameActive) return;
+  if (e.key === "ArrowLeft") player.vx = -3;
+  if (e.key === "ArrowRight") player.vx = 3;
+});
+
+document.addEventListener("keyup", e => {
+  if (!gameActive) return;
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") player.vx = 0;
+});
+
+function endMiniGame() {
+  gameActive = false;
+  cancelAnimationFrame(gameLoop);
+
+  document.getElementById("gameContainer").style.display = "none";
+  document.getElementById("continueBtn").style.display = "none";
+
+  // reset player velocity
+  player.vx = 0;
+  player.vy = 0;
+
+  // return to ELA questions
+  document.getElementById("question").style.display = "block";
+  document.getElementById("choices").style.display = "block";
+  document.getElementById("feedback").style.display = "block";
+
+  // generate next question
+  generateQuestion();
+}
+</script>

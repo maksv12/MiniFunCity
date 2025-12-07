@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MiniFun Clock</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        :root{
+            --clock-size: 6em;
+            --bg-transition: 1200ms;
+            --accent: #ff4d4d;
+            --soft: #ff9999;
+        }
+        html,body{height:100%;}
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            transition: background var(--bg-transition) ease, color 400ms ease;
+            background: linear-gradient(135deg,var(--accent),var(--soft));
+            background-size: 400% 400%;
+        }
+        #clock {
+            font-size: var(--clock-size);
+            color: white;
+            text-shadow: 0 0 10px rgba(0,0,0,0.3);
+            transition: transform 400ms cubic-bezier(.2,.9,.3,1), color 400ms ease, text-shadow 400ms ease;
+            padding: 16px 24px;
+            border-radius: 18px;
+            backdrop-filter: blur(6px) saturate(1.1);
+            position: relative;
+        }
+
+        /* RGB border */
+        .rgb-border {
+            box-shadow: 0 0 30px rgba(0,0,0,0.25), inset 0 0 40px var(--accent);
+            border: 4px solid rgba(255,255,255,0.03);
+        }
+
+        /* neon */
+        .neon {
+            text-shadow: 0 0 8px rgba(255,255,255,0.2), 0 0 18px var(--accent), 0 0 36px rgba(255,0,150,0.15);
+            transform: translateZ(0) scale(1.02);
+        }
+
+        /* vaporwave overlay */
+        .vapor::after{
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(120deg, rgba(255,0,150,0.06), rgba(0,150,255,0.06));
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            border-radius: 18px;
+        }
+
+        /* controls */
+        #settingsBtn {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            font-size: 22px;
+            opacity: 0.25;
+            cursor: pointer;
+            transition: opacity 0.18s;
+            user-select: none;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            color: white;
+        }
+        #settingsBtn:hover{opacity:0.6}
+
+        #settingsPanel {
+            position: absolute;
+            bottom: 60px;
+            left: 15px;
+            width: 320px;
+            max-height: 70vh;
+            padding: 12px 14px;
+            background: rgba(0,0,0,0.55);
+            border-radius: 12px;
+            backdrop-filter: blur(10px) saturate(1.1);
+            border: 1px solid rgba(255,255,255,0.06);
+            display: none;
+            color: white;
+            overflow: auto;
+        }
+        .tabs{display:flex;gap:8px;margin-bottom:8px}
+        .tabBtn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 8px;border-radius:8px;cursor:pointer;color:white}
+        .tabBtn.active{background:rgba(255,255,255,0.04)}
+        .section{display:none}
+        .section.active{display:block}
+
+        .row{display:flex;align-items:center;gap:8px;margin:8px 0}
+        .small{font-size:13px;color:#ddd}
+        .themeGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+        .themeTile{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;text-align:center}
+        .accentPreview{height:18px;border-radius:6px;margin-bottom:6px}
+
+        /* particle canvas */
+        #particleCanvas{position:absolute;inset:0;pointer-events:none}
+
+        /* subtle global animations */
+        @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        .animated-gradient{animation:gradientShift 12s ease infinite}
+
+        /* amoled */
+        .amoled{background:#000 !important}
+
+        /* controls layout small */
+        .controls{display:flex;flex-direction:column}
+        input[type="text"]{width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:white}
+        label{display:flex;align-items:center;gap:8px}
+
+        /* footer helper */
+        #help{position:absolute;right:12px;bottom:12px;color:rgba(255,255,255,0.4);font-size:12px}
+    </style>
+</head>
+<body>
+    <canvas id="particleCanvas"></canvas>
+    <div id="clock" class="rgb-border">00:00:00</div>
+
+    <div id="settingsBtn">⚙️</div>
+    <div id="settingsPanel">
+        <div class="tabs">
+            <button class="tabBtn active" id="generalTab">General</button>
+            <button class="tabBtn" id="themeTab">Themes</button>
+            <button class="tabBtn" id="extrasTab">Extras</button>
+        </div>
+
+        <div id="generalSection" class="section active">
+            <div class="row"><label><input type="checkbox" id="rainbowToggle"> Slow Rainbow Clock</label></div>
+            <div class="row"><label><input type="checkbox" id="cycleToggle"> Auto Theme Cycle (15s)</label></div>
+            <div class="row"><label><input type="checkbox" id="pulseToggle" checked> Clock Pulse</label></div>
+            <div class="row small">Clock size: <input type="range" id="sizeRange" min="3" max="12" step="0.5" value="6"></div>
+            <div class="row"><label>Custom wallpaper URL: <input type="text" id="wallUrl" placeholder="https://... (optional)"></label></div>
+            <div class="row"><button id="applyWall">Apply Wallpaper</button></div>
+        </div>
+
+        <div id="themeSection" class="section">
+            <div class="small">Click a tile to apply. Toggle Pastel from Extras tab or pick pastel tiles below.</div>
+            <div class="themeGrid" id="themeGrid"></div>
+        </div>
+
+        <div id="extrasSection" class="section">
+            <div class="row"><label><input type="checkbox" id="neonToggle"> Neon Mode</label></div>
+            <div class="row"><label><input type="checkbox" id="vaporToggle"> Vaporwave Overlay</label></div>
+            <div class="row"><label><input type="checkbox" id="amoledToggle"> AMOLED (pure black)</label></div>
+            <div class="row"><label><input type="checkbox" id="rgbToggle" checked> RGB Border</label></div>
+            <div class="row"><label><input type="checkbox" id="animGradToggle"> Animated Gradient</label></div>
+            <div class="row"><label><input type="checkbox" id="particlesToggle"> Particles</label></div>
+        </div>
+
+        <div id="help">MiniFun Hub • fully riced</div>
+    </div>
+
+    <script>
+        const clock = document.getElementById('clock');
+        const particleCanvas = document.getElementById('particleCanvas');
+        const ctx = particleCanvas.getContext('2d');
+
+        // time
+        function updateClock(){
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2,'0');
+            const m = String(now.getMinutes()).padStart(2,'0');
+            const s = String(now.getSeconds()).padStart(2,'0');
+            clock.innerText = `${h}:${m}:${s}`;
+        }
+        setInterval(updateClock,1000); updateClock();
+
+        // themes
+        const themes = {
+            red: ['#ff4d4d','#ff9999'],
+            orange: ['#ff9933','#ffd9b3'],
+            yellow: ['#ffeb3b','#fff9c4'],
+            green: ['#4CAF50','#a8e6a3'],
+            blue: ['#2196F3','#90caf9'],
+            purple: ['#9c27b0','#ce93d8'],
+            pink: ['#e91e63','#f8bbd0'],
+            pastel_red: ['#ff9999','#ffe5e5'],
+            pastel_orange: ['#ffcc99','#ffe6cc'],
+            pastel_yellow: ['#fff6a3','#fffbe0'],
+            pastel_green: ['#c2f2c2','#e6ffe6'],
+            pastel_blue: ['#b3daff','#e0f0ff'],
+            pastel_purple: ['#d9b3ff','#f2e6ff'],
+            pastel_pink: ['#ffb3d9','#ffe0f0']
+        };
+        let currentTheme = 'red';
+        let pastelMode = false;
+
+        function applyTheme(theme){
+            if(!themes[theme]) theme = 'red';
+            currentTheme = theme;
+            const [strong, soft] = themes[theme];
+            document.documentElement.style.setProperty('--accent', strong);
+            document.documentElement.style.setProperty('--soft', soft);
+
+            if(document.getElementById('animGradToggle').checked){
+                document.body.classList.add('animated-gradient');
+            } else document.body.classList.remove('animated-gradient');
+
+            // amoled override
+            if(document.getElementById('amoledToggle').checked){
+                document.body.classList.add('amoled');
+            } else document.body.classList.remove('amoled');
+
+            // set background
+            if(!document.body.classList.contains('amoled')){
+                document.body.style.background = `linear-gradient(135deg, ${strong}, ${soft})`;
+            } else document.body.style.background = '#000';
+
+            // update clock glow & rgb border
+            clock.style.textShadow = `0 0 20px ${strong}`;
+            if(document.getElementById('rgbToggle').checked){
+                clock.classList.add('rgb-border');
+            } else clock.classList.remove('rgb-border');
+        }
+
+        // build theme grid
+        const themeGrid = document.getElementById('themeGrid');
+        Object.keys(themes).forEach(key => {
+            const [strong, soft] = themes[key];
+            const tile = document.createElement('div');
+            tile.className = 'themeTile';
+            tile.dataset.theme = key;
+            tile.innerHTML = `<div class="accentPreview" style="background:linear-gradient(90deg, ${strong}, ${soft})"></div><div>${key.replace('_',' ').toUpperCase()}</div>`;
+            tile.onclick = ()=>applyTheme(key);
+            themeGrid.appendChild(tile);
+        });
+
+        // settings toggles
+        document.getElementById('rainbowToggle').onchange = ()=>{
+            if(!document.getElementById('rainbowToggle').checked) clock.style.color='white';
+        }
+        document.getElementById('cycleToggle').onchange = ()=>{};
+        document.getElementById('neonToggle').onchange = ()=>{
+            clock.classList.toggle('neon', document.getElementById('neonToggle').checked);
+        }
+        document.getElementById('vaporToggle').onchange = ()=>{
+            clock.classList.toggle('vapor', document.getElementById('vaporToggle').checked);
+        }
+        document.getElementById('amoledToggle').onchange = ()=>applyTheme(currentTheme);
+        document.getElementById('rgbToggle').onchange = ()=>applyTheme(currentTheme);
+        document.getElementById('animGradToggle').onchange = ()=>applyTheme(currentTheme);
+        document.getElementById('particlesToggle').onchange = ()=>{
+            particlesEnabled = document.getElementById('particlesToggle').checked;
+            if(!particlesEnabled) clearParticles();
+        }
+
+        // wallpaper
+        document.getElementById('applyWall').onclick = ()=>{
+            const url = document.getElementById('wallUrl').value.trim();
+            if(url){
+                document.body.style.background = `url(${url}) center/cover fixed, linear-gradient(135deg,var(--accent),var(--soft))`;
+            } else applyTheme(currentTheme);
+        }
+
+        // tabs
+        const tabs = document.querySelectorAll('.tabBtn');
+        const sections = {general:document.getElementById('generalSection'), theme:document.getElementById('themeSection'), extras:document.getElementById('extrasSection')};
+        tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');
+            sections.general.style.display='none'; sections.theme.style.display='none'; sections.extras.style.display='none';
+            if(t.id==='generalTab') sections.general.style.display='block';
+            if(t.id==='themeTab') sections.theme.style.display='block';
+            if(t.id==='extrasTab') sections.extras.style.display='block';
+        });
+
+        // clock pulse
+        let pulseInterval = null;
+        function startPulse(){
+            if(pulseInterval) return;
+            pulseInterval = setInterval(()=>{clock.style.transform='scale(1.07)';setTimeout(()=>clock.style.transform='scale(1)',500)},2500);
+        }
+        function stopPulse(){clearInterval(pulseInterval);pulseInterval=null;clock.style.transform='scale(1)'}
+        document.getElementById('pulseToggle').onchange = (e)=>{if(e.target.checked) startPulse(); else stopPulse()};
+        startPulse();
+
+        // size slider
+        document.getElementById('sizeRange').oninput = (e)=>{document.documentElement.style.setProperty('--clock-size', e.target.value+'em')};
+
+        // rainbow text
+        let hue=0; setInterval(()=>{if(document.getElementById('rainbowToggle').checked){hue=(hue+0.6)%360;clock.style.color=`hsl(${hue},100%,75%)`} },30);
+
+        // theme cycling
+        let idx=0; const keys = Object.keys(themes);
+        setInterval(()=>{ if(document.getElementById('cycleToggle').checked){ idx=(idx+1)%keys.length; applyTheme(keys[idx]); } },15000);
+
+        // settings panel toggle
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        settingsBtn.onclick = ()=>{ settingsPanel.style.display = settingsPanel.style.display==='none' || !settingsPanel.style.display ? 'block' : 'none'; };
+
+        // particles
+        let particlesEnabled = true;
+        let particles = [];
+        function resizeCanvas(){ particleCanvas.width = innerWidth; particleCanvas.height = innerHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        function spawnParticle(){
+            const p = {x: Math.random()*particleCanvas.width, y: particleCanvas.height + 10, vx:(Math.random()-0.5)*0.6, vy:- (1+Math.random()*2), size: 1+Math.random()*3, life: 200+Math.random()*200, hue: Math.random()*360};
+            particles.push(p);
+        }
+        function clearParticles(){particles=[]; ctx.clearRect(0,0,particleCanvas.width,particleCanvas.height)}
+
+        function updateParticles(){
+            if(!particlesEnabled) return;
+            if(Math.random()<0.25) spawnParticle();
+            ctx.clearRect(0,0,particleCanvas.width,particleCanvas.height);
+            for(let i=particles.length-1;i>=0;i--){
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 1; p.vy += 0.01;
+                ctx.beginPath(); ctx.fillStyle = `hsla(${p.hue},80%,60%,${Math.max(p.life/300,0)})`; ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+                if(p.life<=0 || p.y>particleCanvas.height+50) particles.splice(i,1);
+            }
+        }
+
+        // anim loop
+        function loop(){ updateParticles(); requestAnimationFrame(loop); }
+        loop();
+
+        // initial apply
+        applyTheme(currentTheme);
+
+        // expose for dev/testing
+        window.MiniFun = {applyTheme, themes};
+    </script>
+</body>
+</html>

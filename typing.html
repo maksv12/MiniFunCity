@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Typing Test</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; background: #f0fff0; }
+        #sentence { font-size: 20px; margin-bottom: 20px; }
+        input { font-size: 18px; padding: 10px; width: 80%; margin: 10px 0; }
+        button { font-size: 18px; padding: 10px 20px; margin: 5px; border-radius: 8px; border: none; cursor: pointer; background: #32cd32; color: white; transition: 0.2s; }
+        button:hover { background: #50e050; }
+        #result { margin-top: 20px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>Typing Test!</h1>
+    <div id="sentence"></div>
+    <input type="text" id="userInput" placeholder="Type here..." autocomplete="off">
+    <br>
+    <button onclick="checkTyping()">Submit</button>
+    <button onclick="startTest()">Restart</button>
+    <h2 id="result"></h2>
+
+    <script>
+        const sentences = [
+            "The quick brown fox jumps over the lazy dog.",
+            "Typing fast is fun when you practice every day.",
+            "Javascript makes web pages interactive and fun.",
+            "Never stop learning new things, keep growing.",
+            "Practice makes perfect in everything you do.",
+            "Small consistent efforts beat occasional bursts of work.",
+            "Challenge yourself to improve a little every day."
+        ];
+
+        let startTime;
+        const input = document.getElementById('userInput');
+
+        function startTest(){
+            const randomIndex = Math.floor(Math.random() * sentences.length);
+            document.getElementById('sentence').innerText = sentences[randomIndex];
+            input.value = "";
+            document.getElementById('result').innerText = "";
+            startTime = new Date();
+            input.focus();
+        }
+
+        function checkTyping(){
+            const userText = input.value.trim();
+            const targetText = document.getElementById('sentence').innerText;
+            const endTime = new Date();
+            const timeTaken = (endTime - startTime) / 1000; // seconds
+            const words = userText.split(/\s+/).length;
+            const wpm = Math.round((words / timeTaken) * 60);
+
+            let correctChars = 0;
+            for(let i = 0; i < Math.min(userText.length, targetText.length); i++){
+                if(userText[i] === targetText[i]) correctChars++;
+            }
+            const accuracy = Math.round((correctChars / targetText.length) * 100);
+
+            document.getElementById('result').innerText = `⏱ Time: ${timeTaken.toFixed(1)}s | WPM: ${wpm} | Accuracy: ${accuracy}%`;
+        }
+
+        // Press Enter to submit typing
+        input.addEventListener('keydown', function(e){
+            if(e.key === 'Enter') checkTyping();
+        });
+
+        startTest();
+    </script>
+</body>
+</html>

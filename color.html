@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Color Guess Game</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; background: #f0f8ff; }
+        #colorBox { width: 150px; height: 150px; margin: 20px auto; border: 2px solid #333; display: none; }
+        button { padding: 10px 20px; margin: 5px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #ff69b4; color: white; transition: 0.2s; }
+        button:hover { background: #ff85c1; }
+        h2 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Color Guess Game!</h1>
+    <div id="colorBox"></div>
+    <p id="clues"></p>
+    <div id="buttons"></div>
+    <h2>Score: <span id="score">0</span></h2>
+    <h2 id="message"></h2>
+
+    <script>
+        const colors = [
+            {name: "red", clue1: "R", clue2: "warm color"},
+            {name: "green", clue1: "G", clue2: "nature color"},
+            {name: "blue", clue1: "B", clue2: "cool color"},
+            {name: "yellow", clue1: "Y", clue2: "bright color"},
+            {name: "purple", clue1: "P", clue2: "royal color"},
+            {name: "orange", clue1: "O", clue2: "sunset color"},
+            {name: "pink", clue1: "P", clue2: "cute color"},
+            {name: "cyan", clue1: "C", clue2: "sky color"}
+        ];
+
+        let score = 0;
+        let correctColor = {};
+        const colorBox = document.getElementById('colorBox');
+
+        function newRound(){
+            correctColor = colors[Math.floor(Math.random() * colors.length)];
+
+            // hide colorBox for new round
+            colorBox.style.display = 'none';
+
+            // show clues only
+            document.getElementById('clues').innerText = `Clues: ${correctColor.clue1}, ${correctColor.clue2}`;
+
+            // pick 2 random other colors for buttons
+            let choices = [correctColor.name];
+            while(choices.length < 3){
+                let c = colors[Math.floor(Math.random() * colors.length)].name;
+                if(!choices.includes(c)) choices.push(c);
+            }
+            // shuffle choices
+            choices.sort(() => Math.random() - 0.5);
+
+            const buttonsDiv = document.getElementById('buttons');
+            buttonsDiv.innerHTML = "";
+            choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.innerText = c;
+                btn.onclick = () => checkGuess(c);
+                buttonsDiv.appendChild(btn);
+            });
+            document.getElementById('message').innerText = "";
+        }
+
+        function checkGuess(color){
+            // show the color block
+            colorBox.style.backgroundColor = correctColor.name;
+            colorBox.style.display = 'block';
+
+            if(color === correctColor.name){
+                score++;
+                document.getElementById('message').innerText = "🎉 Correct!";
+            } else {
+                document.getElementById('message').innerText = "❌ Wrong!";
+            }
+            document.getElementById('score').innerText = score;
+
+            // wait a bit before new round
+            setTimeout(newRound, 1200);
+        }
+
+        newRound();
+    </script>
+</body>
+</html>

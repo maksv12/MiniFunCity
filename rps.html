@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rock-Paper-Scissors</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; }
+        button { font-size: 20px; margin: 10px; padding: 10px 20px; cursor: pointer; }
+        h2 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Rock-Paper-Scissors!</h1>
+    <button onclick="play('rock')">✊ Rock</button>
+    <button onclick="play('paper')">✋ Paper</button>
+    <button onclick="play('scissors')">✌️ Scissors</button>
+    <h2 id="result"></h2>
+
+    <script>
+        function play(player) {
+            let choices = ['rock', 'paper', 'scissors'];
+            let computer = choices[Math.floor(Math.random() * 3)];
+            let result = '';
+
+            if(player === computer) result = "Tie! 🤝";
+            else if(
+                (player === 'rock' && computer === 'scissors') ||
+                (player === 'paper' && computer === 'rock') ||
+                (player === 'scissors' && computer === 'paper')
+            ) result = `You win! 🏆 Computer chose ${computer}`;
+            else result = `You lose 😭 Computer chose ${computer}`;
+
+            document.getElementById('result').innerText = result;
+        }
+    </script>
+</body>
+</html>
